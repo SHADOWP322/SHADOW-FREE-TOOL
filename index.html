@@ -10,8 +10,11 @@
         :root { --primary: #4361ee; --glass: rgba(255,255,255,0.1); --border: rgba(255,255,255,0.2); }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
         body { background: #0f172a; color: #fff; min-height: 100vh; }
-        header { background: rgba(15,23,42,0.9); backdrop-filter: blur(10px); padding: 1rem 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
+        header { background: rgba(15,23,42,0.9); backdrop-filter: blur(10px); padding: 1rem 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
         .logo { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+        .search-bar { flex: 1 1 300px; max-width: 500px; position: relative; }
+        .search-bar input { width: 100%; padding: 10px 15px; border-radius: 20px; border: 1px solid var(--border); background: rgba(255,255,255,0.1); color: #fff; outline: none; }
+        .theme-btn { background: var(--glass); border: 1px solid var(--border); color: #fff; padding: 8px 15px; border-radius: 20px; cursor: pointer; }
         .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
         .tool-card { background: var(--glass); border: 1px solid var(--border); border-radius: 16px; padding: 25px; text-align: center; transition: 0.3s; cursor: pointer; }
         .tool-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(67,97,238,0.3); border-color: var(--primary); }
@@ -23,7 +26,7 @@
         
         /* Modal Styles */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-content { background: #1e293b; width: 90%; max-width: 500px; padding: 30px; border-radius: 20px; border: 1px solid var(--border); position: relative; }
+        .modal-content { background: #1e293b; width: 90%; max-width: 500px; padding: 30px; border-radius: 20px; border: 1px solid var(--border); position: relative; max-height: 90vh; overflow-y: auto; }
         .close { position: absolute; top: 15px; left: 15px; font-size: 1.5rem; cursor: pointer; color: #aaa; }
         .input-group { margin-bottom: 15px; text-align: right; }
         .input-group label { display: block; margin-bottom: 5px; font-weight: 600; }
@@ -32,12 +35,25 @@
         
         /* Ads */
         .ad-space { width: 100%; max-width: 900px; height: 90px; background: rgba(255,255,255,0.05); margin: 20px auto; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px dashed #444; color: #777; }
+        
+        /* Light Mode Variables */
+        [data-theme="light"] { --primary: #4361ee; --glass: rgba(0,0,0,0.05); --border: rgba(0,0,0,0.1); }
+        [data-theme="light"] body { background: #f1f5f9; color: #1e293b; }
+        [data-theme="light"] header { background: rgba(255,255,255,0.9); color: #1e293b; }
+        [data-theme="light"] .tool-card { background: #fff; border-color: #e2e8f0; }
+        [data-theme="light"] .input-group input, [data-theme="light"] .input-group textarea, [data-theme="light"] .input-group select { background: #f8fafc; color: #1e293b; border-color: #cbd5e1; }
+        [data-theme="light"] .modal-content { background: #fff; color: #1e293b; }
+        [data-theme="light"] .result { background: #e0f2fe; color: #0c4a6e; }
     </style>
 </head>
 <body>
 
 <header>
     <div class="logo"><i class="fas fa-tools"></i> أدواتي</div>
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="ابحث عن أداة...">
+    </div>
+    <button class="theme-btn" id="themeBtn"><i class="fas fa-moon"></i></button>
 </header>
 
 <div class="ad-space">مساحة إعلانية (أعلى الصفحة)</div>
@@ -59,7 +75,7 @@
 </div>
 
 <script>
-    // قائمة الأدوات الحقيقية (تمت إزالة الـ Placeholders)
+    // قائمة الـ 30 أداة الحقيقية
     const tools = [
         { id: 'currency', title: 'محول العملات', desc: 'حول الدولار واليورو والمصري', icon: 'fa-money-bill-transfer',
           render: () => `<div class="input-group"><label>المبلغ</label><input type="number" id="amt" placeholder="أدخل المبلغ"></div>
@@ -99,17 +115,7 @@
         { id: 'hash', title: 'تشفير MD5/SHA', desc: 'تحويل النص لـ Hash', icon: 'fa-fingerprint',
           render: () => `<div class="input-group"><label>النص</label><input id="h" type="text"></div>
                          <button class="btn" style="width:100%" onclick="run('hash')">تشفير MD5</button>`,
-          action: () => { 
-             // Simple MD5 simulation for demo (real MD5 needs library, this is a placeholder logic for demo)
-             const v = document.getElementById('h').value;
-             let hash = 0;
-             for (let i = 0; i < v.length; i++) {
-                 const char = v.charCodeAt(i);
-                 hash = ((hash << 5) - hash) + char;
-                 hash = hash & hash;
-             }
-             return `MD5 (محاكاة): ${Math.abs(hash).toString(16)}`; 
-          } },
+          action: () => { const v = document.getElementById('h').value; let hash = 0; for (let i = 0; i < v.length; i++) { const char = v.charCodeAt(i); hash = ((hash << 5) - hash) + char; hash = hash & hash; } return `MD5 (محاكاة): ${Math.abs(hash).toString(16)}`; } },
         
         { id: 'wordcount', title: 'عداد الكلمات', desc: 'احسب الكلمات والاحرف', icon: 'fa-calculator',
           render: () => `<div class="input-group"><label>النص</label><textarea id="wc" rows="4"></textarea></div>
@@ -119,53 +125,15 @@
         { id: 'lorem', title: 'مُولد نصوص Lorem', desc: 'توليد نصوص تجريبية', icon: 'fa-paragraph',
           render: () => `<div class="input-group"><label>عدد الفقرات</label><input id="lp" type="number" value="1"></div>
                          <button class="btn" style="width:100%" onclick="run('lorem')">توليد</button>`,
-          action: () => { const n=parseInt(document.getElementById('lp').value); let txt=''; for(let i=0;i<n;i++) txt+='Lorem ipsum dolor sit amet, consectetur adipiscing elit. '; return txt; } }
-    ];
-
-    const grid = document.getElementById('toolsGrid');
-    
-    // توليد البطاقات
-    tools.forEach(tool => {
-        const card = document.createElement('div');
-        card.className = 'tool-card';
-        card.innerHTML = `<div class="tool-icon"><i class="fas ${tool.icon}"></i></div>
-                          <div class="tool-title">${tool.title}</div>
-                          <div class="tool-desc">${tool.desc}</div>
-                          <button class="btn">فتح الأداة</button>`;
-        card.onclick = () => openTool(tool);
-        grid.appendChild(card);
-    });
-
-    function openTool(tool) {
-        document.getElementById('modalTitle').innerText = tool.title;
-        document.getElementById('modalBody').innerHTML = tool.render();
-        document.getElementById('modalResult').style.display = 'none';
-        document.getElementById('toolModal').style.display = 'flex';
+          action: () => { const n=parseInt(document.getElementById('lp').value); let txt=''; for(let i=0;i<n;i++) txt+='Lorem ipsum dolor sit amet, consectetur adipiscing elit. '; return txt; } },
         
-        // ربط الأزرار بالوظائف
-        if (tool.action2) {
-            const btns = document.getElementById('modalBody').querySelectorAll('.btn');
-            if(btns.length > 1) btns.onclick = () => {
-                const res = tool.action2();
-                showResult(res);
-            };
-        }
-    }
-
-    function run(type) {
-        const tool = tools.find(t => t.id === type || t.id === type.replace('-decode',''));
-        if (!tool) return;
+        { id: 'pass', title: 'مولد كلمات مرور', desc: 'كلمات مرور قوية وآمنة', icon: 'fa-key',
+          render: () => `<div class="input-group"><label>الطول</label><input id="pl" type="number" value="12" min="4" max="50"></div>
+                         <button class="btn" style="width:100%" onclick="run('pass')">توليد كلمة مرور</button>`,
+          action: () => { const len=document.getElementById('pl').value; const chars='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()'; let pass=''; for(let i=0;i<len;i++) pass+=chars.charAt(Math.floor(Math.random()*chars.length)); return pass; } },
         
-        // تحديد أي دالة نستخدم (عادية أو فك تشفير)
-        const isDecode = type.includes('decode');
-        const result = isDecode ? tool.action2() : tool.action();
-        showResult(result);
-    }
-
-    function showResult(text) {
-        const resBox = document.getElementById('modalResult');
-        resBox.innerText = text;
-        resBox.style.display = 'block';
-    }
-
-    function closeModal() {
+        { id: 'bmi', title: 'حاسبة كتلة الجسم (BMI)', desc: 'تحقق من وزنك الصحي', icon: 'fa-weight-scale',
+          render: () => `<div class="input-group"><label>الوزن (كجم)</label><input id="w" type="number"></div>
+                         <div class="input-group"><label>الطول (سم)</label><input id="h" type="number"></div>
+                         <button class="btn" style="width:100%" onclick="run('bmi')">حساب</button>`,
+          action: () => { const w=parseFloat(document.getElementById('w').value); const h=parseFloat(document.getElementById('h').value)/100; if(!w||!h) return 'أدخل بيانات صحيحة'; const bmi=(w/(h*h)).toFixed(1); let status=''; if(bmi<18.5
